@@ -1,15 +1,21 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
-from typing import Iterable, List
+from pathlib import Path
+from typing import Iterable, List, Optional
 
 
 @dataclass
 class Meme:
     """Simple representation of a meme post."""
+
     url: str
     title: str
     score: int
     subreddit: str
     over_18: bool = False
+    ocr_text: Optional[str] = None
+    image_path: Optional[Path] = None
 
 
 def filter_quality_memes(memes: Iterable[Meme], min_score: int = 500) -> List[Meme]:
