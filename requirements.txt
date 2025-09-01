@@ -1,35 +1,23 @@
 # Reddit API
-praw==7.8.1
+praw>=7.0.0
 
 # Video and Audio Processing
-moviepy==1.0.3
-coqui-tts==0.22.1
+moviepy>=2.0.0
 
 # Google API (for potential future use, kept from original)
-google-api-python-client==2.179.0
-google-auth-oauthlib==1.2.2
-google-auth-httplib2==0.2.0
+google-api-python-client
+google-auth-oauthlib
+google-auth-httplib2
 
 # General
-requests==2.32.5
-Pillow==10.3.0
+requests>=2.20.0
+Pillow>=9.0.0
 
 # OCR
-pytesseract==0.3.13
+pytesseract>=0.3.10
 
 # Testing
-pytest==8.4.1
+pytest>=7.0.0
 
-# Core TTS Dependencies (pinned for stability)
-numpy==1.22.0
-cython==3.1.3
-scipy==1.11.2
-torch==2.1.0
-torchaudio==2.1.0
-soundfile==0.12.1
-pyyaml==6.0
-coqpit==0.0.17
-trainer==0.0.36
-numba==0.57.0
-gruut==2.2.3
-tokenizers==0.14.1
+# New TTS
+Voice-Cloning

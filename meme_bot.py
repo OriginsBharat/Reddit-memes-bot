@@ -16,6 +16,7 @@ import requests
 from moviepy.editor import AudioFileClip, ImageClip, concatenate_videoclips, TextClip, CompositeVideoClip
 
 from quality import Meme, filter_quality_memes
+from voice_cloning.generation import speech_generator, save_sound
 
 logger = logging.getLogger(__name__)
 
@@ -100,9 +101,6 @@ class MemeBot:
 
     def generate_tts(self, memes: List[Meme], folder: Path, speaker_wav: str) -> Tuple[List[Path], List[Meme]]:
         """Generate narration using OCR text, falling back to title."""
-        from TTS.api import TTS
-
-        tts = TTS(model_name="tts_models/multilingual/multi-dataset/xtts_v2", progress_bar=False, gpu=False)
         audio_paths: List[Path] = []
         kept: List[Meme] = []
         for i, meme in enumerate(memes):
@@ -112,13 +110,11 @@ class MemeBot:
                     logger.warning("No text to speak for meme %s", meme.url)
                     continue
 
+                generated_wav = speech_generator(text_to_speak, sound_path=speaker_wav)
+
                 audio_path = folder / f"meme_{i}.wav"
-                tts.tts_to_file(
-                    text=text_to_speak,
-                    speaker_wav=speaker_wav,
-                    language="en",
-                    file_path=str(audio_path),
-                )
+                save_sound(generated_wav, str(audio_path))
+
                 audio_paths.append(audio_path)
                 kept.append(meme)
             except Exception as exc:
