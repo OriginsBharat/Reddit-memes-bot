@@ -183,7 +183,7 @@ class MemeBot:
         """
         subreddits = self.config.get("subreddits", [
             "memes", "dankmemes", "IndianDankMemes", "animememes",
-            "wholesomememes", "gamingmemes"
+            "wholesomememes"
         ])
         logger.info("Using subreddits: %s", ", ".join(subreddits))
 
