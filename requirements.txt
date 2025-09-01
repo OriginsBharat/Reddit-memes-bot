@@ -1,12 +1,33 @@
-praw
-moviepy
-coqui-tts
+# Reddit API
+praw>=7.0.0
+
+# Video and Audio Processing
+moviepy>=2.0.0
+coqui-tts>=0.22.0
+
+# Google API (for potential future use, kept from original)
 google-api-python-client
 google-auth-oauthlib
 google-auth-httplib2
-requests
-pytest
-pytesseract>=0.3.13
-Pillow>=11.3.0
-coqpit-config~=0.2.0
-numpy>=1.25.0
+
+# General
+requests>=2.20.0
+Pillow>=9.0.0
+
+# OCR
+pytesseract>=0.3.10
+
+# Testing
+pytest>=7.0.0
+
+# Core TTS Dependencies (pinned for stability based on coqui-ai/TTS)
+numpy>=1.24.3
+cython>=0.29.30
+scipy>=1.11.2
+torch>=2.1
+torchaudio
+soundfile>=0.12.0
+pyyaml>=6.0
+coqpit>=0.0.16
+trainer>=0.0.36
+numba>=0.57.0
