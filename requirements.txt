@@ -2,7 +2,7 @@
 praw==7.8.1
 
 # Video and Audio Processing
-moviepy==2.2.1
+moviepy==1.0.3
 coqui-tts==0.22.1
 
 # Google API (for potential future use, kept from original)
