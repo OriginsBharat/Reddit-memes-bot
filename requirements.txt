@@ -3,7 +3,7 @@ praw==7.8.1
 
 # Video and Audio Processing
 moviepy==2.2.1
-coqui-tts==0.22.0
+coqui-tts==0.22.1
 
 # Google API (for potential future use, kept from original)
 google-api-python-client==2.179.0
