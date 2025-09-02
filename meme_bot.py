@@ -16,6 +16,7 @@ import requests
 from moviepy.editor import AudioFileClip, ImageClip, concatenate_videoclips, TextClip, CompositeVideoClip
 
 from quality import Meme, filter_quality_memes
+from google.cloud import texttospeech
 
 logger = logging.getLogger(__name__)
 
@@ -24,6 +25,8 @@ class MemeBot:
         self.config = config
         self.video_counter = video_counter
         self.processed_file = Path("processed_memes.txt")
+        # Set the Google Cloud credentials environment variable
+        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = self.config["google_credentials_path"]
 
     def load_processed(self) -> Set[str]:
         if self.processed_file.exists():
@@ -98,11 +101,11 @@ class MemeBot:
             logger.error("OCR failed for %s: %s", image_path, exc)
             return ""
 
-    def generate_tts(self, memes: List[Meme], folder: Path, speaker_wav: str) -> Tuple[List[Path], List[Meme]]:
-        """Generate narration using Coqui TTS, falling back to title."""
-        from TTS.api import TTS
+    def generate_tts(self, memes: List[Meme], folder: Path) -> Tuple[List[Path], List[Meme]]:
+        """Generate narration using Google Cloud TTS."""
+        client = texttospeech.TextToSpeechClient()
+        voice_name = self.config.get("google_voice_name", "en-US-Wavenet-D")
 
-        tts = TTS(model_name="tts_models/multilingual/multi-dataset/xtts_v2", progress_bar=False, gpu=False)
         audio_paths: List[Path] = []
         kept: List[Meme] = []
         for i, meme in enumerate(memes):
@@ -112,13 +115,18 @@ class MemeBot:
                     logger.warning("No text to speak for meme %s", meme.url)
                     continue
 
-                audio_path = folder / f"meme_{i}.wav"
-                tts.tts_to_file(
-                    text=text_to_speak,
-                    speaker_wav=speaker_wav,
-                    language="en",
-                    file_path=str(audio_path),
+                synthesis_input = texttospeech.SynthesisInput(text=text_to_speak)
+                voice = texttospeech.VoiceSelectionParams(language_code="en-US", name=voice_name)
+                audio_config = texttospeech.AudioConfig(audio_encoding=texttospeech.AudioEncoding.MP3)
+
+                response = client.synthesize_speech(
+                    input=synthesis_input, voice=voice, audio_config=audio_config
                 )
+
+                audio_path = folder / f"meme_{i}.mp3"
+                with open(audio_path, "wb") as out:
+                    out.write(response.audio_content)
+
                 audio_paths.append(audio_path)
                 kept.append(meme)
             except Exception as exc:
@@ -127,31 +135,33 @@ class MemeBot:
 
     def create_video(self, images: List[Path], audios: List[Path], output: Path, video_counter: int) -> None:
         """Combine images and narration into a single video with title and end screens."""
+        from moviepy.video.fx.all import blur
         logger.info(f"Creating video number {video_counter + 1}")
 
-        # Create meme clips
+        display_time = self.config.get("display_time", 5)
+        total_duration = len(images) * display_time
+
+        # Create a list of video clips from the images
         meme_clips = []
         for img, audio in zip(images, audios):
-            img_clip = ImageClip(str(img)).set_duration(self.config.get("display_time", 5))
+            img_clip = ImageClip(str(img)).set_duration(display_time).set_pos(("center", "center"))
             audio_clip = AudioFileClip(str(audio))
             img_clip = img_clip.set_audio(audio_clip)
             meme_clips.append(img_clip)
 
         main_compilation = concatenate_videoclips(meme_clips, method="compose")
 
-        # Create title screen
-        title_text = f"Memes i found on reddit #{video_counter + 1}"
-        title_clip = TextClip(title_text, fontsize=70, color='white', size=main_compilation.size).set_duration(3)
-        animation = VideoFileClip("endscreen_animation.gif", has_mask=True).resize(height=150).set_pos(("center", "center"))
-        title_screen = CompositeVideoClip([title_clip, animation])
+        # Create background
+        bg_clip = VideoFileClip("background.mp4").set_duration(main_compilation.duration).fx(blur, 25).loop()
 
-        # Create end screen
-        end_text = "Please subscribe and share!"
-        end_clip = TextClip(end_text, fontsize=70, color='white', size=main_compilation.size).set_duration(3)
-        end_screen = CompositeVideoClip([end_clip, animation.set_start(0)])
+        # Composite the compilation over the background
+        final_compilation = CompositeVideoClip([bg_clip, main_compilation])
 
-        # Concatenate all parts
-        final_video = concatenate_videoclips([title_screen, main_compilation, end_screen])
+        # Create title and end screens
+        intro_clip = VideoFileClip("intro.mp4")
+        outro_clip = VideoFileClip("outro.mp4")
+
+        final_video = concatenate_videoclips([intro_clip, final_compilation, outro_clip])
         final_video.write_videofile(str(output), fps=24, codec="libx264", preset="ultrafast")
 
     def upvote_memes(self, memes: List[Meme]):
@@ -194,8 +204,6 @@ class MemeBot:
             images_dir.mkdir()
             audios_dir.mkdir()
 
-            speaker_wav = self.config["voice_sample"]
-
             memes = self.fetch_memes(subreddits)[:8]
             memes = self.download_memes(memes, images_dir)
 
@@ -203,7 +211,7 @@ class MemeBot:
                 if meme.image_path:
                     meme.ocr_text = self.extract_text_from_image(meme.image_path)
 
-            audio_paths, memes = self.generate_tts(memes, audios_dir, speaker_wav)
+            audio_paths, memes = self.generate_tts(memes, audios_dir)
 
             if not memes:
                 raise Exception("No memes with audio could be processed.")

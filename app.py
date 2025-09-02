@@ -60,11 +60,9 @@ class MemeBotApp:
         self.video_path = None
         self.settings = Settings()
 
-        # Main frame
         self.main_frame = ttk.Frame(self.root, padding="10")
         self.main_frame.pack(fill=tk.BOTH, expand=True)
 
-        # --- Controls ---
         self.controls_frame = ttk.LabelFrame(self.main_frame, text="Controls", padding="10")
         self.controls_frame.pack(fill=tk.X, pady=5)
 
@@ -77,7 +75,6 @@ class MemeBotApp:
         self.settings_button = ttk.Button(self.controls_frame, text="Settings", command=self.open_settings)
         self.settings_button.pack(side=tk.RIGHT, padx=5)
 
-        # --- Progress Log ---
         self.log_frame = ttk.LabelFrame(self.main_frame, text="Progress", padding="10")
         self.log_frame.pack(fill=tk.BOTH, expand=True, pady=5)
 
@@ -93,7 +90,7 @@ class MemeBotApp:
     def open_settings(self):
         self.settings_window = tk.Toplevel(self.root)
         self.settings_window.title("Settings")
-        self.settings_window.geometry("500x300")
+        self.settings_window.geometry("500x350")
 
         frame = ttk.Frame(self.settings_window, padding="10")
         frame.pack(fill=tk.BOTH, expand=True)
@@ -111,23 +108,33 @@ class MemeBotApp:
         for key, text in settings_to_create:
             row = ttk.Frame(frame)
             row.pack(fill=tk.X, pady=2)
-            label = ttk.Label(row, text=text, width=20)
+            label = ttk.Label(row, text=text, width=25)
             label.pack(side=tk.LEFT)
             entry = ttk.Entry(row)
             entry.pack(side=tk.RIGHT, expand=True, fill=tk.X)
             entry.insert(0, self.settings.get(key, ""))
             self.setting_entries[key] = entry
 
-        # Voice Sample
+        # Google Cloud Credentials
         row = ttk.Frame(frame)
         row.pack(fill=tk.X, pady=2)
-        label = ttk.Label(row, text="Voice Sample:", width=20)
+        label = ttk.Label(row, text="Google Credentials JSON:", width=25)
         label.pack(side=tk.LEFT)
-        self.voice_sample_var = tk.StringVar(value=self.settings.get("voice_sample", ""))
-        voice_entry = ttk.Entry(row, textvariable=self.voice_sample_var, state="readonly")
-        voice_entry.pack(side=tk.LEFT, expand=True, fill=tk.X)
-        browse_button = ttk.Button(row, text="Browse...", command=self.browse_voice_sample)
+        self.google_credentials_var = tk.StringVar(value=self.settings.get("google_credentials_path", ""))
+        google_entry = ttk.Entry(row, textvariable=self.google_credentials_var, state="readonly")
+        google_entry.pack(side=tk.LEFT, expand=True, fill=tk.X)
+        browse_button = ttk.Button(row, text="Browse...", command=self.browse_google_credentials)
         browse_button.pack(side=tk.RIGHT)
+
+        # Google Cloud Voice Selection
+        row = ttk.Frame(frame)
+        row.pack(fill=tk.X, pady=2)
+        label = ttk.Label(row, text="Google Voice:", width=25)
+        label.pack(side=tk.LEFT)
+        self.google_voice_var = tk.StringVar(value=self.settings.get("google_voice_name", "en-US-Wavenet-D"))
+        voices = ["en-US-Wavenet-D", "en-US-Wavenet-A", "en-US-Wavenet-F", "en-GB-Wavenet-A", "en-AU-Wavenet-B"]
+        voice_dropdown = ttk.OptionMenu(row, self.google_voice_var, self.google_voice_var.get(), *voices)
+        voice_dropdown.pack(side=tk.RIGHT, expand=True, fill=tk.X)
 
         button_frame = ttk.Frame(frame)
         button_frame.pack(fill=tk.X, pady=10)
@@ -136,17 +143,18 @@ class MemeBotApp:
         cancel_button = ttk.Button(button_frame, text="Cancel", command=self.settings_window.destroy)
         cancel_button.pack(side=tk.RIGHT)
 
-    def browse_voice_sample(self):
+    def browse_google_credentials(self):
         path = filedialog.askopenfilename(
-            filetypes=[("WAV files", "*.wav")],
-            title="Select Voice Sample"
+            filetypes=[("JSON files", "*.json")],
+            title="Select Google Cloud Credentials File"
         )
         if path:
-            self.voice_sample_var.set(path)
+            self.google_credentials_var.set(path)
 
     def save_settings(self):
         new_config = {key: entry.get() for key, entry in self.setting_entries.items()}
-        new_config["voice_sample"] = self.voice_sample_var.get()
+        new_config["google_credentials_path"] = self.google_credentials_var.get()
+        new_config["google_voice_name"] = self.google_voice_var.get()
         self.settings.save(new_config)
         self.settings_window.destroy()
 
@@ -158,7 +166,7 @@ class MemeBotApp:
         self.log_text.configure(state='disabled')
 
         config = self.settings.load()
-        if not all(key in config for key in ["reddit_client_id", "reddit_client_secret", "voice_sample"]):
+        if not all(key in config for key in ["reddit_client_id", "reddit_client_secret", "google_credentials_path"]):
             logging.error("Please configure your settings first.")
             self.generate_button.config(state=tk.NORMAL)
             return
@@ -169,7 +177,6 @@ class MemeBotApp:
 
     def generate_video(self, config, video_counter):
         try:
-            os.environ["COQUI_TOS_AGREED"] = "1"
             bot = MemeBot(config, video_counter)
             self.video_path = bot.run()
             logging.info(f"Video generation complete! Path: {self.video_path}")
