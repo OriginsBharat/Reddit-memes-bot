@@ -1,58 +1,59 @@
-# Meme Bot Application Setup Instructions
+# Meme Bot Application Setup Instructions (Electron Version)
 
-This guide will walk you through the final, correct steps to set up and run the Meme Bot application.
-
-This process has two parts: a **One-Time Setup**, and then the steps to **Run the App** every time after that.
+This guide will walk you through the final, correct steps to set up and run the new Electron-based Meme Bot application.
 
 ---
 
-### **Part 1: One-Time Setup**
+### **Prerequisite: Install Node.js**
 
-You only need to do this once. This creates a clean, isolated environment for the app so it will work perfectly.
-
-1.  **Install Python 3.9:**
-    *   If you haven't already, please install Python 3.9 from the official Python website: [https://www.python.org/downloads/release/python-3913/](https://www.python.org/downloads/release/python-3913/)
-    *   **Important:** During installation, make sure to check the box that says "Add Python 3.9 to PATH".
-
-2.  **Open a Terminal in the Project Folder:**
-    *   Navigate to the project directory in your PowerShell or Command Prompt.
-
-3.  **Create the Virtual Environment:**
-    *   Run this command. It will create a `venv` folder in your project directory.
-    *   ```powershell
-      py -3.9 -m venv venv
-      ```
-
-4.  **Activate the Environment:**
-    *   Now, run this command to "enter" the isolated environment. You'll know it's active because your command prompt will change to show `(venv)`.
-    *   ```powershell
-      .\venv\Scripts\activate
-      ```
-
-5.  **Install All Dependencies:**
-    *   Finally, run this command. It will install the correct, conflict-free versions of all the necessary libraries into the virtual environment.
-    *   ```powershell
-      pip install -r requirements.txt
-      ```
-
-The one-time setup is now complete!
+If you don't have it already, please install Node.js (which includes the `npm` command). You can download it from the official website: **[https://nodejs.org/](https://nodejs.org/)** (the LTS version is recommended).
 
 ---
 
-### **Part 2: How to Run the App (Every Time)**
+### **Part 1: Setup and Installation**
 
-Now, whenever you want to run the application, just follow these steps:
+1.  **Get the Latest Code:**
+    *   Make sure you have the latest version of the project code in a clean folder.
 
-1.  **Open a new terminal** in the project folder.
+2.  **Open a Terminal:**
+    *   Open your terminal (PowerShell or Command Prompt) in the project directory.
 
-2.  **Activate the environment:**
-    ```powershell
-    .\venv\Scripts\activate
-    ```
+3.  **Install Dependencies:**
+    *   Run this single command. It will download all the necessary libraries defined in `package.json`.
+    *   ```bash
+      npm install
+      ```
 
-3.  **Run the app:**
-    ```powershell
-    python app.py
-    ```
+---
 
-That's it! The application window will open. You can then go to "Settings" to enter your API keys and voice sample, and then start generating videos.
+### **Part 2: Running the Application**
+
+1.  **Start the App:**
+    *   In the same terminal, run this command:
+    *   ```bash
+      npm start
+      ```
+    *   The application window will now open.
+
+2.  **Configure Your Settings:**
+    *   In the application window, you will see input fields for your API keys. You will need to get these from the respective services:
+        *   **Reddit:** Client ID and Client Secret.
+        *   **Uberduck:** API Key and Secret (you can get these by signing up on the Uberduck.ai website).
+        *   **Voice Sample:** A `.wav` file of the voice you want to clone.
+    *   Enter your keys and select your voice file in the app, then click **"Save Settings"**.
+
+3.  **Generate Your Video:**
+    *   Click the **"Generate Video"** button. The progress will be shown in the log window.
+    *   When it's done, a download link will appear.
+
+---
+
+### **(Optional) Creating a Standalone `.exe` Installer**
+
+If you want to create a single `.exe` file that you can run without using the terminal, run this command *after* you have installed the dependencies (after Step 3 in Part 1):
+
+```bash
+npm run dist
+```
+
+This will create a `dist` folder in your project directory containing the installer.
