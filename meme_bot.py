@@ -132,9 +132,9 @@ class MemeBot:
         # Create meme clips
         meme_clips = []
         for img, audio in zip(images, audios):
-            img_clip = ImageClip(str(img)).with_duration(self.config.get("display_time", 5))
+            img_clip = ImageClip(str(img)).set_duration(self.config.get("display_time", 5))
             audio_clip = AudioFileClip(str(audio))
-            img_clip = img_clip.with_audio(audio_clip)
+            img_clip = img_clip.set_audio(audio_clip)
             meme_clips.append(img_clip)
 
         main_compilation = concatenate_videoclips(meme_clips, method="compose")
