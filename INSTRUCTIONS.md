@@ -1,59 +1,59 @@
-# Meme Bot Application Setup Instructions (Electron Version)
+# Meme Bot Application Setup Instructions
 
-This guide will walk you through the final, correct steps to set up and run the new Electron-based Meme Bot application.
-
----
-
-### **Prerequisite: Install Node.js**
-
-If you don't have it already, please install Node.js (which includes the `npm` command). You can download it from the official website: **[https://nodejs.org/](https://nodejs.org/)** (the LTS version is recommended).
+This guide will walk you through the final, correct steps to set up and run the Meme Bot application. This process will create a clean, isolated environment for the app so it will work perfectly.
 
 ---
 
-### **Part 1: Setup and Installation**
+### **Part 1: One-Time Setup**
 
-1.  **Get the Latest Code:**
-    *   Make sure you have the latest version of the project code in a clean folder.
+You only need to do this once.
 
-2.  **Open a Terminal:**
-    *   Open your terminal (PowerShell or Command Prompt) in the project directory.
+1.  **Install Python 3.9:**
+    *   If you don't have it already, please install Python 3.9 from the official Python website: [https://www.python.org/downloads/release/python-3913/](https://www.python.org/downloads/release/python-3913/)
+    *   **Important:** During installation, make sure to check the box that says "Add Python 3.9 to PATH".
 
-3.  **Install Dependencies:**
-    *   Run this single command. It will download all the necessary libraries defined in `package.json`.
-    *   ```bash
-      npm install
+2.  **Get the Latest Code:**
+    *   Download the latest version of the project code into a new, clean folder.
+
+3.  **Open a Terminal in the Project Folder:**
+    *   Navigate to the project directory in your PowerShell or Command Prompt.
+
+4.  **Create the Virtual Environment:**
+    *   Run this command. It will use the Python 3.9 you just installed to create a `venv` folder in your project directory.
+    *   ```powershell
+      py -3.9 -m venv venv
       ```
 
----
-
-### **Part 2: Running the Application**
-
-1.  **Start the App:**
-    *   In the same terminal, run this command:
-    *   ```bash
-      npm start
+5.  **Activate the Environment:**
+    *   Now, run this command to "enter" the isolated environment. You'll know it's active because your command prompt will change to show `(venv)`.
+    *   ```powershell
+      .\venv\Scripts\activate
       ```
-    *   The application window will now open.
 
-2.  **Configure Your Settings:**
-    *   In the application window, you will see input fields for your API keys. You will need to get these from the respective services:
-        *   **Reddit:** Client ID and Client Secret.
-        *   **Uberduck:** API Key and Secret (you can get these by signing up on the Uberduck.ai website).
-        *   **Voice Sample:** A `.wav` file of the voice you want to clone.
-    *   Enter your keys and select your voice file in the app, then click **"Save Settings"**.
+6.  **Install All Dependencies:**
+    *   Finally, run this command. It will install the correct, conflict-free versions of all the necessary libraries into the virtual environment.
+    *   ```powershell
+      pip install -r requirements.txt
+      ```
 
-3.  **Generate Your Video:**
-    *   Click the **"Generate Video"** button. The progress will be shown in the log window.
-    *   When it's done, a download link will appear.
+The one-time setup is now complete!
 
 ---
 
-### **(Optional) Creating a Standalone `.exe` Installer**
+### **Part 2: How to Run the App (Every Time)**
 
-If you want to create a single `.exe` file that you can run without using the terminal, run this command *after* you have installed the dependencies (after Step 3 in Part 1):
+Now, whenever you want to run the application, just follow these steps:
 
-```bash
-npm run dist
-```
+1.  **Open a new terminal** in the project folder.
 
-This will create a `dist` folder in your project directory containing the installer.
+2.  **Activate the environment:**
+    ```powershell
+    .\venv\Scripts\activate
+    ```
+
+3.  **Run the app:**
+    ```powershell
+    python app.py
+    ```
+
+That's it! The application window will open. You can then go to "Settings" to enter your API keys and voice sample, and then start generating videos.
