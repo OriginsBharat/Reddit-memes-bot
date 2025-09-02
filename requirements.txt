@@ -2,9 +2,9 @@
 praw>=7.0.0
 
 # Video and Audio Processing
-moviepy>=2.0.0
+moviepy>=2.2.1
 
-# Google API (for potential future use, kept from original)
+# Google API
 google-api-python-client
 google-auth-oauthlib
 google-auth-httplib2
@@ -19,5 +19,15 @@ pytesseract>=0.3.10
 # Testing
 pytest>=7.0.0
 
-# New TTS
-Voice-Cloning
+# TTS from GitHub commit for stability
+-e git+https://github.com/coqui-ai/TTS@8c20a599d8d4eac32db2f7b8cd9f9b3d1190b73a#egg=TTS
+
+# Other core dependencies
+numpy>=1.24.3
+cython>=0.29.30
+scipy>=1.11.2
+torch>=2.1
+torchaudio
+soundfile>=0.12.0
+pyyaml>=6.0
+numba>=0.57.0

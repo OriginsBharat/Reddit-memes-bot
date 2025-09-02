@@ -16,7 +16,6 @@ import requests
 from moviepy.editor import AudioFileClip, ImageClip, concatenate_videoclips, TextClip, CompositeVideoClip
 
 from quality import Meme, filter_quality_memes
-from voice_cloning.generation import speech_generator, save_sound
 
 logger = logging.getLogger(__name__)
 
@@ -100,7 +99,10 @@ class MemeBot:
             return ""
 
     def generate_tts(self, memes: List[Meme], folder: Path, speaker_wav: str) -> Tuple[List[Path], List[Meme]]:
-        """Generate narration using OCR text, falling back to title."""
+        """Generate narration using Coqui TTS, falling back to title."""
+        from TTS.api import TTS
+
+        tts = TTS(model_name="tts_models/multilingual/multi-dataset/xtts_v2", progress_bar=False, gpu=False)
         audio_paths: List[Path] = []
         kept: List[Meme] = []
         for i, meme in enumerate(memes):
@@ -110,11 +112,13 @@ class MemeBot:
                     logger.warning("No text to speak for meme %s", meme.url)
                     continue
 
-                generated_wav = speech_generator(text_to_speak, sound_path=speaker_wav)
-
                 audio_path = folder / f"meme_{i}.wav"
-                save_sound(generated_wav, str(audio_path))
-
+                tts.tts_to_file(
+                    text=text_to_speak,
+                    speaker_wav=speaker_wav,
+                    language="en",
+                    file_path=str(audio_path),
+                )
                 audio_paths.append(audio_path)
                 kept.append(meme)
             except Exception as exc:
@@ -128,9 +132,9 @@ class MemeBot:
         # Create meme clips
         meme_clips = []
         for img, audio in zip(images, audios):
-            img_clip = ImageClip(str(img)).set_duration(self.config.get("display_time", 5))
+            img_clip = ImageClip(str(img)).with_duration(self.config.get("display_time", 5))
             audio_clip = AudioFileClip(str(audio))
-            img_clip = img_clip.set_audio(audio_clip)
+            img_clip = img_clip.with_audio(audio_clip)
             meme_clips.append(img_clip)
 
         main_compilation = concatenate_videoclips(meme_clips, method="compose")
@@ -212,8 +216,6 @@ class MemeBot:
             self.save_processed(m.url for m in memes)
             self.upvote_memes(memes)
 
-            # The video is in a temporary directory, so we need to move it
-            # to a permanent location before the directory is cleaned up.
             final_video_path = Path.cwd() / f"meme_compilation_{date.today().isoformat()}.mp4"
             video_path.rename(final_video_path)
 

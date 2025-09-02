@@ -4,6 +4,8 @@ import threading
 import logging
 from pathlib import Path
 import shutil
+import os
+import json
 
 from meme_bot import MemeBot
 
@@ -21,8 +23,6 @@ class TextHandler(logging.Handler):
             self.text_widget.configure(state='disabled')
             self.text_widget.yview(tk.END)
         self.text_widget.after(0, append)
-
-import json
 
 class Settings:
     def __init__(self, filename="config.json"):
@@ -77,6 +77,19 @@ class MemeBotApp:
         self.settings_button = ttk.Button(self.controls_frame, text="Settings", command=self.open_settings)
         self.settings_button.pack(side=tk.RIGHT, padx=5)
 
+        # --- Progress Log ---
+        self.log_frame = ttk.LabelFrame(self.main_frame, text="Progress", padding="10")
+        self.log_frame.pack(fill=tk.BOTH, expand=True, pady=5)
+
+        self.log_text = tk.Text(self.log_frame, wrap=tk.WORD, height=10, state='disabled')
+        self.log_text.pack(fill=tk.BOTH, expand=True)
+
+        self.log_text_handler = TextHandler(self.log_text)
+        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+        self.log_text_handler.setFormatter(formatter)
+        logging.getLogger().addHandler(self.log_text_handler)
+        logging.getLogger().setLevel(logging.INFO)
+
     def open_settings(self):
         self.settings_window = tk.Toplevel(self.root)
         self.settings_window.title("Settings")
@@ -85,7 +98,6 @@ class MemeBotApp:
         frame = ttk.Frame(self.settings_window, padding="10")
         frame.pack(fill=tk.BOTH, expand=True)
 
-        # Create a dictionary to hold the entry widgets
         self.setting_entries = {}
 
         settings_to_create = [
@@ -117,7 +129,6 @@ class MemeBotApp:
         browse_button = ttk.Button(row, text="Browse...", command=self.browse_voice_sample)
         browse_button.pack(side=tk.RIGHT)
 
-        # Save and Cancel buttons
         button_frame = ttk.Frame(frame)
         button_frame.pack(fill=tk.X, pady=10)
         save_button = ttk.Button(button_frame, text="Save", command=self.save_settings)
@@ -139,20 +150,6 @@ class MemeBotApp:
         self.settings.save(new_config)
         self.settings_window.destroy()
 
-        # --- Progress Log ---
-        self.log_frame = ttk.LabelFrame(self.main_frame, text="Progress", padding="10")
-        self.log_frame.pack(fill=tk.BOTH, expand=True, pady=5)
-
-        self.log_text = tk.Text(self.log_frame, wrap=tk.WORD, height=10, state='disabled')
-        self.log_text.pack(fill=tk.BOTH, expand=True)
-
-        # Configure logging
-        self.log_text_handler = TextHandler(self.log_text)
-        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-        self.log_text_handler.setFormatter(formatter)
-        logging.getLogger().addHandler(self.log_text_handler)
-        logging.getLogger().setLevel(logging.INFO)
-
     def start_video_generation_thread(self):
         self.generate_button.config(state=tk.DISABLED)
         self.download_button.config(state=tk.DISABLED)
@@ -172,7 +169,7 @@ class MemeBotApp:
 
     def generate_video(self, config, video_counter):
         try:
-            # This is a blocking call, run in a thread
+            os.environ["COQUI_TOS_AGREED"] = "1"
             bot = MemeBot(config, video_counter)
             self.video_path = bot.run()
             logging.info(f"Video generation complete! Path: {self.video_path}")
@@ -201,14 +198,7 @@ class MemeBotApp:
             except Exception as e:
                 logging.error(f"Failed to save video: {e}")
 
-
 if __name__ == "__main__":
-    import os
-    # Create dummy voice file for testing if it doesn't exist
-    if not Path("test_voice.wav").exists():
-        with open("test_voice.wav", "w") as f:
-            f.write("")
-
     root = tk.Tk()
     app = MemeBotApp(root)
     root.mainloop()
